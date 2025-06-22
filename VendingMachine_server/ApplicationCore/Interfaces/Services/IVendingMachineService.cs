@@ -5,9 +5,9 @@ namespace VendingMachine.ApplicationCore.Interfaces.Services
 {
     public interface IVendingMachineService
     {
-        Task<IEnumerable<Product>> GetProductsAsync(int? brandId, decimal? minPrice, decimal? maxPrice);
+        Task<IEnumerable<ProductDto>> GetProductsAsync(int? brandId, decimal? minPrice, decimal? maxPrice);
         Task<(decimal MinPrice, decimal MaxPrice)> GetPriceRangeAsync(int? brandId);
-        Task<IEnumerable<Brand>> GetBrandsAsync();
+        Task<IEnumerable<BrandDto>> GetBrandsAsync();
         Task<IEnumerable<Coin>> GetCoinsAsync();
         Task<bool> IsMachineBusyAsync();
         Task LockMachineAsync();

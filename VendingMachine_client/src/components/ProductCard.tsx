@@ -1,6 +1,6 @@
 import { useDispatch } from 'react-redux';
 import { addToCart } from '../store/slices/cartSlice';
-import { Product } from '../types';
+import { type Product } from '../types';
 
 interface ProductCardProps {
   product: Product;

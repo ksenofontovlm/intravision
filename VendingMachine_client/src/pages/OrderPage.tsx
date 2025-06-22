@@ -1,9 +1,8 @@
 import { useEffect } from 'react';
 import { useSelector, useDispatch } from 'react-redux';
 import { useNavigate } from 'react-router-dom';
-import { RootState } from '../store/store';
+import { type RootState } from '../store/store';
 import { fetchOrderDetails } from '../store/slices/orderSlice';
-import { clearCart } from '../store/slices/cartSlice';
 import OrderItem from '../components/OrderItem';
 
 const OrderPage: React.FC = () => {

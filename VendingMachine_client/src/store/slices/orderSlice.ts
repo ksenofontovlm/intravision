@@ -3,11 +3,11 @@ import { vendingApi } from '../../api/vendingApi';
 import { type Order, type Coin } from '../../types';
 import { AxiosError } from 'axios';
 
-interface PaymentResult {
-  Message: string;
-  ChangeAmount: number;
-  ChangeCoins: Record<number, number>;
-}
+// interface PaymentResult {
+//   Message: string;
+//   ChangeAmount: number;
+//   ChangeCoins: Record<number, number>;
+// }
 
 interface OrderState {
   order: Order | null;
@@ -33,7 +33,7 @@ export const fetchOrderDetails = createAsyncThunk(
       return response.data;
     } catch (error) {
       const axiosError = error as AxiosError;
-      return rejectWithValue(axiosError.response?.data as string || 'Ошибка загрузки Заказов');
+      return rejectWithValue(axiosError.response?.data as string || 'Ошибка загрузки заказа');
     }
   }
 );
@@ -44,8 +44,9 @@ export const fetchCoins = createAsyncThunk(
     try {
       const response = await vendingApi.getCoins();
       return response.data;
-    } catch (error: any) {
-      return rejectWithValue(error.response?.data || 'Ошибка загрузки монет');
+    } catch (error) {
+      const axiosError = error as AxiosError;
+      return rejectWithValue(axiosError.response?.data as string || 'Ошибка загрузки монет');
     }
   }
 );
@@ -56,8 +57,9 @@ export const processPayment = createAsyncThunk(
     try {
       const response = await vendingApi.processPayment(orderId, insertedCoins);
       return response.data;
-    } catch (error: any) {
-      return rejectWithValue(error.response?.data || 'Ошибка обработки платежа');
+    } catch (error) {
+      const axiosError = error as AxiosError;
+      return rejectWithValue(axiosError.response?.data as string || 'Ошибка обработки платежа');
     }
   }
 );

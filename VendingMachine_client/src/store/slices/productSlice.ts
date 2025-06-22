@@ -1,4 +1,4 @@
-import { createSlice, createAsyncThunk, type PayloadAction } from '@reduxjs/toolkit';
+import { createSlice, createAsyncThunk } from '@reduxjs/toolkit';
 import { vendingApi } from '../../api/vendingApi';
 import { type Product } from '../../types';
 import { AxiosError } from 'axios';
@@ -38,9 +38,9 @@ const productSlice = createSlice({
         state.loading = true;
         state.error = null;
       })
-      .addCase(fetchProducts.fulfilled, (state, action: PayloadAction<Product[]>) => {
-       state.loading = false;
-       state.products = action.payload;
+       .addCase(fetchProducts.fulfilled, (state, action) => {
+        state.loading = false;
+        state.products = action.payload || [];
       })
       .addCase(fetchProducts.rejected, (state, action) => {
         state.loading = false;

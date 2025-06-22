@@ -1,7 +1,6 @@
 import { useSelector, useDispatch } from 'react-redux';
-import { RootState } from '../store/store';
+import { type RootState } from '../store/store';
 import { setBrandId } from '../store/slices/filterSlice';
-import { Brand } from '../types';
 
 const BrandFilter: React.FC = () => {
   const dispatch = useDispatch();
@@ -9,7 +8,7 @@ const BrandFilter: React.FC = () => {
   const selectedBrandId = useSelector((state: RootState) => state.filter.brandId);
 
   const handleChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
-    const value = e.target.value === '0' ? null : Number(e.target.value);
+    const value = e.target.value === '0' ? undefined : Number(e.target.value);
     dispatch(setBrandId(value));
   };
 

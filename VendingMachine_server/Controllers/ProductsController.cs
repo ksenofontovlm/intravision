@@ -1,10 +1,12 @@
-﻿using Microsoft.AspNetCore.Mvc;
+﻿using Microsoft.AspNetCore.Cors;
+using Microsoft.AspNetCore.Mvc;
 using VendingMachine.ApplicationCore.Interfaces.Services;
 
 namespace VendingMachine.Controllers
 {
     [Route("api/[controller]")]
     [ApiController]
+    [EnableCors("AllowFrontend")]
     public class ProductsController : ControllerBase
     {
         private readonly IVendingMachineService _vendingMachineService;

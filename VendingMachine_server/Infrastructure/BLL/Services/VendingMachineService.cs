@@ -13,6 +13,7 @@ namespace VendingMachine.Infrastructure.BLL.Services
         private readonly IBrandRepository _brandRepository;
         private readonly ICoinRepository _coinRepository;
         private readonly IOrderRepository _orderRepository;
+        private static readonly object _lock = new object();
         private static bool _isMachineBusy;
 
         public VendingMachineService(
@@ -27,9 +28,23 @@ namespace VendingMachine.Infrastructure.BLL.Services
             _orderRepository = orderRepository;
         }
 
-        public async Task<IEnumerable<Product>> GetProductsAsync(int? brandId, decimal? minPrice, decimal? maxPrice)
+
+        public async Task<IEnumerable<ProductDto>> GetProductsAsync(int? brandId, decimal? minPrice, decimal? maxPrice)
         {
-            return await _productRepository.GetFilteredProductsAsync(brandId, minPrice, maxPrice);
+            var products = await _productRepository.GetFilteredProductsAsync(brandId, minPrice, maxPrice);
+            return products.Select(p => new ProductDto
+            {
+                Id = p.Id,
+                Name = p.Name,
+                Price = p.Price,
+                QuantityInStock = p.QuantityInStock,
+                BrandId = p.BrandId,
+                Brand = new BrandDto
+                {
+                    Id = p.Brand.Id,
+                    Name = p.Brand.Name
+                }
+            }).ToList();
         }
 
         public async Task<(decimal MinPrice, decimal MaxPrice)> GetPriceRangeAsync(int? brandId)
@@ -40,9 +55,14 @@ namespace VendingMachine.Infrastructure.BLL.Services
             return (minPrice, maxPrice);
         }
 
-        public async Task<IEnumerable<Brand>> GetBrandsAsync()
+        public async Task<IEnumerable<BrandDto>> GetBrandsAsync()
         {
-            return await _brandRepository.GetAllAsync();
+            var brands = await _brandRepository.GetAllAsync();
+            return brands.Select(b => new BrandDto
+            {
+                Id = b.Id,
+                Name = b.Name
+            }).ToList();
         }
 
         public async Task<IEnumerable<Coin>> GetCoinsAsync()
@@ -57,13 +77,22 @@ namespace VendingMachine.Infrastructure.BLL.Services
 
         public async Task LockMachineAsync()
         {
-            _isMachineBusy = true;
+            lock (_lock)
+            {
+                if (!_isMachineBusy)
+                {
+                    _isMachineBusy = true;
+                }
+            }
             await Task.CompletedTask;
         }
 
         public async Task UnlockMachineAsync()
         {
-            _isMachineBusy = false;
+            lock (_lock)
+            {
+                _isMachineBusy = false;
+            }
             await Task.CompletedTask;
         }
 

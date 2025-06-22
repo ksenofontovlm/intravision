@@ -1,5 +1,5 @@
 import { useSelector, useDispatch } from 'react-redux';
-import { RootState } from '../store/store';
+import { type RootState } from '../store/store';
 import { setPriceRange } from '../store/slices/filterSlice';
 
 const PriceFilter: React.FC = () => {

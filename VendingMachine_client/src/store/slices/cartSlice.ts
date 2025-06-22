@@ -1,6 +1,6 @@
 import { createSlice, createAsyncThunk, type PayloadAction } from '@reduxjs/toolkit';
 import { vendingApi } from '../../api/vendingApi';
-import { CartItem } from '../../types';
+import { type CartItem } from '../../types';
 
 interface CartState {
   items: CartItem[];

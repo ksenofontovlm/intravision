@@ -1,16 +1,19 @@
-import { createSlice, createAsyncThunk, type PayloadAction } from '@reduxjs/toolkit';
+import { createSlice, createAsyncThunk } from '@reduxjs/toolkit';
 import { vendingApi } from '../../api/vendingApi';
+import { AxiosError } from 'axios';
 
 interface MachineState {
   isBusy: boolean;
   loading: boolean;
   error: string | null;
+
 }
 
 const initialState: MachineState = {
   isBusy: false,
   loading: false,
   error: null,
+
 };
 
 export const checkMachineStatus = createAsyncThunk(
@@ -18,9 +21,10 @@ export const checkMachineStatus = createAsyncThunk(
   async (_, { rejectWithValue }) => {
     try {
       const response = await vendingApi.isMachineBusy();
-      return response.data.IsBusy;
-    } catch (error: any) {
-      return rejectWithValue(error.response?.data || 'Ошибка проверки статуса автомата');
+      return response.IsBusy;
+    } catch (error) {
+          const axiosError = error as AxiosError;
+          return rejectWithValue(axiosError.response?.data as string ||  'Ошибка проверки статуса автомата');
     }
   }
 );
@@ -31,8 +35,9 @@ export const lockMachine = createAsyncThunk(
     try {
       await vendingApi.lockMachine();
       return true;
-    } catch (error: any) {
-      return rejectWithValue(error.response?.data || 'Ошибка блокировки автомата');
+    } catch (error) {
+      const axiosError = error as AxiosError;
+      return rejectWithValue(axiosError.response?.data as string ||  'Ошибка блокировки автомата');
     }
   }
 );
@@ -43,8 +48,9 @@ export const unlockMachine = createAsyncThunk(
     try {
       await vendingApi.unlockMachine();
       return false;
-    } catch (error: any) {
-      return rejectWithValue(error.response?.data || 'Ошибка разблокировки автомата');
+    } catch (error) {
+      const axiosError = error as AxiosError;
+      return rejectWithValue(axiosError.response?.data as string || 'Ошибка разблокировки автомата');
     }
   }
 );
@@ -52,7 +58,12 @@ export const unlockMachine = createAsyncThunk(
 const machineSlice = createSlice({
   name: 'machine',
   initialState,
-  reducers: {},
+  reducers: {
+    resetMachineState: (state) => {
+      state.isBusy = false;
+      state.error = null;
+    },
+  },
   extraReducers: (builder) => {
     builder
       .addCase(checkMachineStatus.pending, (state) => {
@@ -67,13 +78,31 @@ const machineSlice = createSlice({
         state.loading = false;
         state.error = action.payload as string;
       })
+      .addCase(lockMachine.pending, (state) => {
+        state.loading = true;
+        state.error = null;
+      })
       .addCase(lockMachine.fulfilled, (state) => {
+        state.loading = false;
         state.isBusy = true;
       })
+      .addCase(lockMachine.rejected, (state, action) => {
+        state.loading = false;
+        state.error = action.payload as string;
+      })
+      .addCase(unlockMachine.pending, (state) => {
+        state.loading = true;
+        state.error = null;
+      })
       .addCase(unlockMachine.fulfilled, (state) => {
+        state.loading = false;
         state.isBusy = false;
+      })
+      .addCase(unlockMachine.rejected, (state, action) => {
+        state.loading = false;
+        state.error = action.payload as string;
       });
   },
 });
-
+export const { resetMachineState } = machineSlice.actions;
 export default machineSlice.reducer;

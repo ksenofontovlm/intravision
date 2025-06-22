@@ -10,6 +10,7 @@ namespace VendingMachine.ApplicationCore.DomModels
         [Required, MaxLength(100)]
         public string Name { get; set; }
 
+        //[JsonIgnore]
         public ICollection<Product> Products { get; set; }
     }
 }

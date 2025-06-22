@@ -1,11 +1,12 @@
 import { createSlice, createAsyncThunk, type PayloadAction } from '@reduxjs/toolkit';
 import { vendingApi } from '../../api/vendingApi';
-import { Brand } from '../../types';
+import { type Brand } from '../../types';
+import { AxiosError } from 'axios';
 
 interface FilterState {
-  brandId: number | null;
-  minPrice: number | null;
-  maxPrice: number | null;
+  brandId: number | undefined;
+  minPrice: number | undefined;
+  maxPrice: number | undefined;
   brands: Brand[];
   priceRange: { min: number; max: number } | null;
   loading: boolean;
@@ -13,9 +14,9 @@ interface FilterState {
 }
 
 const initialState: FilterState = {
-  brandId: null,
-  minPrice: null,
-  maxPrice: null,
+  brandId: undefined,
+  minPrice: undefined,
+  maxPrice: undefined,
   brands: [],
   priceRange: null,
   loading: false,
@@ -27,9 +28,10 @@ export const fetchBrands = createAsyncThunk(
   async (_, { rejectWithValue }) => {
     try {
       const response = await vendingApi.getBrands();
-      return response.data;
-    } catch (error: any) {
-      return rejectWithValue(error.response?.data || 'Ошибка загрузки брендов');
+      return response;
+    } catch (error) {
+          const axiosError = error as AxiosError;
+          return rejectWithValue(axiosError.response?.data as string || 'Ошибка загрузки брендов');
     }
   }
 );
@@ -39,9 +41,10 @@ export const fetchPriceRange = createAsyncThunk(
   async (brandId: number | undefined, { rejectWithValue }) => {
     try {
       const response = await vendingApi.getPriceRange(brandId);
-      return response.data;
-    } catch (error: any) {
-      return rejectWithValue(error.response?.data || 'Ошибка загрузки ценового диапазона');
+      return response;
+    } catch (error) {
+      const axiosError = error as AxiosError;
+      return rejectWithValue(axiosError.response?.data as string || 'Ошибка загрузки ценового диапазона');
     }
   }
 );
@@ -50,7 +53,7 @@ const filterSlice = createSlice({
   name: 'filter',
   initialState,
   reducers: {
-    setBrandId: (state, action: PayloadAction<number | null>) => {
+    setBrandId: (state, action: PayloadAction<number | undefined>) => {
       state.brandId = action.payload;
     },
     setPriceRange: (state, action: PayloadAction<{ minPrice: number; maxPrice: number }>) => {

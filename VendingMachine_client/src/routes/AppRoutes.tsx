@@ -12,6 +12,7 @@ const AppRoutes = () => {
         <Route path="/order" element={<OrderPage />} />
         <Route path="/payment" element={<PaymentPage />} />
         <Route path="/success" element={<SuccessPage />} />
+        <Route path="*" element={<div>404: Страница не найдена</div>} />
       </Routes>
     </BrowserRouter>
   );

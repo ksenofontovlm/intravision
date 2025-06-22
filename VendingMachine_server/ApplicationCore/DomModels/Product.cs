@@ -21,6 +21,7 @@ namespace VendingMachine.ApplicationCore.DomModels
         [Required]
         public int BrandId { get; set; }
 
+        //[JsonIgnore]
         [ForeignKey("BrandId")]
         public Brand Brand { get; set; }
     }

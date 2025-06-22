@@ -1,6 +1,6 @@
 import { useSelector } from 'react-redux';
 import { useNavigate } from 'react-router-dom';
-import { RootState } from '../store/store';
+import { type RootState } from '../store/store';
 
 const SuccessPage: React.FC = () => {
   const navigate = useNavigate();

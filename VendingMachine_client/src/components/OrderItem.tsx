@@ -1,6 +1,6 @@
 import { useDispatch } from 'react-redux';
 import { updateCartItem, removeCartItem } from '../store/slices/cartSlice';
-import { OrderItem as OrderItemType } from '../types';
+import { type OrderItem as OrderItemType } from '../types';
 
 interface OrderItemProps {
   item: OrderItemType;
