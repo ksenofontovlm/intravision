@@ -20,7 +20,7 @@ export const fetchProducts = createAsyncThunk(
   async ({ brandId, minPrice, maxPrice }: { brandId?: number; minPrice?: number; maxPrice?: number }, { rejectWithValue }) => {
     try {
       const response = await vendingApi.getProducts(brandId, minPrice, maxPrice);
-      return response.data;
+      return response;
     } catch (error) {
       const axiosError = error as AxiosError;
       return rejectWithValue(axiosError.response?.data as string || 'Ошибка загрузки продуктов');
@@ -40,7 +40,8 @@ const productSlice = createSlice({
       })
        .addCase(fetchProducts.fulfilled, (state, action) => {
         state.loading = false;
-        state.products = action.payload || [];
+        state.products = Array.isArray(action.payload) ? action.payload : [];
+        console.log('Updated products in state:', state.products);
       })
       .addCase(fetchProducts.rejected, (state, action) => {
         state.loading = false;

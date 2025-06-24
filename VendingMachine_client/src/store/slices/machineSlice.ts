@@ -4,6 +4,7 @@ import { AxiosError } from 'axios';
 
 interface MachineState {
   isBusy: boolean;
+  isOwner: boolean;
   loading: boolean;
   error: string | null;
 
@@ -12,6 +13,7 @@ interface MachineState {
 const initialState: MachineState = {
   isBusy: false,
   loading: false,
+  isOwner: false, 
   error: null,
 
 };
@@ -61,7 +63,11 @@ const machineSlice = createSlice({
   reducers: {
     resetMachineState: (state) => {
       state.isBusy = false;
+      state.isOwner = false;
       state.error = null;
+    },
+        setOwnership: (state, action) => {
+      state.isOwner = action.payload;
     },
   },
   extraReducers: (builder) => {
@@ -85,6 +91,7 @@ const machineSlice = createSlice({
       .addCase(lockMachine.fulfilled, (state) => {
         state.loading = false;
         state.isBusy = true;
+        state.isOwner = true; 
       })
       .addCase(lockMachine.rejected, (state, action) => {
         state.loading = false;
@@ -97,6 +104,7 @@ const machineSlice = createSlice({
       .addCase(unlockMachine.fulfilled, (state) => {
         state.loading = false;
         state.isBusy = false;
+        state.isOwner = false;
       })
       .addCase(unlockMachine.rejected, (state, action) => {
         state.loading = false;
@@ -104,5 +112,5 @@ const machineSlice = createSlice({
       });
   },
 });
-export const { resetMachineState } = machineSlice.actions;
+export const { resetMachineState, setOwnership } = machineSlice.actions;
 export default machineSlice.reducer;

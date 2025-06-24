@@ -42,7 +42,6 @@ builder.Services.AddScoped<IVendingMachineService, VendingMachineService>();
 #endregion
 
 
-// ----------------   ÂÀÆÍÎ!!!! - ÅÑËÈ ÓÁÐÀÒÜ ÎØÈÁÊÀ ÂÛËÅÒÀÅÒ ÍÀ ÖÈÊËÛ. ïîñëå îòëàäêè ðàçîáðàòüñÿ!!! ---------------------------
 builder.Services.AddControllers().AddJsonOptions(x => x.JsonSerializerOptions.ReferenceHandler
                                                                         = ReferenceHandler.IgnoreCycles);
 
