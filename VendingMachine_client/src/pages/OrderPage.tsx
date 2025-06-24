@@ -10,14 +10,20 @@ const OrderPage: React.FC = () => {
   const navigate = useNavigate();
   const order = useSelector((state: RootState) => state.order.order);
   const orderId = useSelector((state: RootState) => state.cart.orderId);
+  const loading = useSelector((state: RootState) => state.order.loading);
+  const error = useSelector((state: RootState) => state.order.error);
 
   useEffect(() => {
-    if (orderId) {
+    if (orderId && !order) {
+      console.log('Fetching order details for orderId:', orderId);
       dispatch(fetchOrderDetails(orderId));
     }
-  }, [dispatch, orderId]);
+  }, [dispatch, orderId, order]);
 
+  if (loading) return <p>Загрузка...</p>;
+  if (error) return <p>Ошибка: {error}</p>;
   if (!order || !order.orderItems.length) {
+    console.log('Order is empty or null:', order);
     return (
       <div className="container mx-auto p-4">
         <p className="text-center text-xl">У вас нет ни одного товара, вернитесь на страницу каталога</p>

@@ -109,15 +109,19 @@ namespace VendingMachine.Infrastructure.BLL.Services
             foreach (var item in cartItems)
             {
                 var product = await _productRepository.GetByIdAsync(item.ProductId);
-                if (product == null || product.QuantityInStock < item.Quantity)
-                    throw new InvalidOperationException("Недостаточно товара на складе");
+                if (product == null)
+                {
+                    throw new InvalidOperationException($"Продукт с ID {item.ProductId} не найден");
+                }
+                if (product.QuantityInStock < item.Quantity)
+                    throw new InvalidOperationException($"Недостаточно товара на складе для продукта ID {item.ProductId}");
 
                 order.TotalAmount += product.Price * item.Quantity;
                 orderItems.Add(new OrderItem
                 {
                     ProductId = product.Id,
                     ProductName = product.Name,
-                    BrandName = product.Brand.Name,
+                    BrandName = product.Brand?.Name ?? "Неизвестный бренд",
                     UnitPrice = product.Price,
                     Quantity = item.Quantity,
                     Order = order

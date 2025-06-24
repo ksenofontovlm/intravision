@@ -1,6 +1,7 @@
 import { createSlice, createAsyncThunk, type PayloadAction } from '@reduxjs/toolkit';
 import { vendingApi } from '../../api/vendingApi';
 import { type CartItem } from '../../types';
+import { AxiosError } from 'axios';
 
 interface CartState {
   items: CartItem[];
@@ -23,9 +24,11 @@ export const createOrder = createAsyncThunk(
   async (items: CartItem[], { rejectWithValue }) => {
     try {
       const response = await vendingApi.createOrder(items);
-      return response.data;
-    } catch (error: any) {
-      return rejectWithValue(error.response?.data || 'Ошибка создания заказа');
+      console.log('Create order response:', response);
+      return response; // { OrderId: number, TotalAmount: number }
+    } catch (error) {
+      const axiosError = error as AxiosError;
+      return rejectWithValue(axiosError.response?.data as string || 'Ошибка создания заказа');
     }
   }
 );
@@ -36,8 +39,9 @@ export const updateCartItem = createAsyncThunk(
     try {
       await vendingApi.updateCartItem(orderId, item);
       return item;
-    } catch (error: any) {
-      return rejectWithValue(error.response?.data || 'Ошибка обновления корзины');
+    } catch (error) {
+      const axiosError = error as AxiosError;
+      return rejectWithValue(axiosError.response?.data as string || 'Ошибка обновления корзины');
     }
   }
 );
@@ -48,8 +52,9 @@ export const removeCartItem = createAsyncThunk(
     try {
       await vendingApi.removeCartItem(orderId, productId);
       return productId;
-    } catch (error: any) {
-      return rejectWithValue(error.response?.data || 'Ошибка удаления товара');
+    } catch (error) {
+      const axiosError = error as AxiosError;
+      return rejectWithValue(axiosError.response?.data as string || 'Ошибка удаления товара');
     }
   }
 );
@@ -61,9 +66,9 @@ const cartSlice = createSlice({
     addToCart: (state, action: PayloadAction<CartItem>) => {
       const existingItem = state.items.find(item => item.productId === action.payload.productId);
       if (existingItem) {
-        existingItem.quantity += action.payload.quantity;
+        existingItem.quantity = action.payload.quantity;
       } else {
-        state.items.push(action.payload);
+        state.items.push({ ...action.payload });
       }
       state.totalItems = state.items.reduce((sum, item) => sum + item.quantity, 0);
     },
@@ -81,7 +86,8 @@ const cartSlice = createSlice({
       })
       .addCase(createOrder.fulfilled, (state, action) => {
         state.loading = false;
-        state.orderId = action.payload.OrderId;
+        state.orderId = action.payload.OrderId; // Извлекаем OrderId из ответа
+        console.log('Order created, orderId:', state.orderId, 'items:', state.items);
       })
       .addCase(createOrder.rejected, (state, action) => {
         state.loading = false;
