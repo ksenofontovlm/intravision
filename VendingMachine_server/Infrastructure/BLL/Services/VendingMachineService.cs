@@ -147,6 +147,9 @@ namespace VendingMachine.Infrastructure.BLL.Services
             if (product == null || product.QuantityInStock < cartItem.Quantity)
                 throw new InvalidOperationException("Недостаточно товара на складе");
 
+            if (product.BrandId != 0 && product.Brand == null)
+                throw new InvalidOperationException($"Продукт с ID {cartItem.ProductId} имеет недействительный BrandId");
+
             var existingItem = order.OrderItems.FirstOrDefault(oi => oi.ProductId == cartItem.ProductId);
             if (existingItem != null)
             {
@@ -161,7 +164,7 @@ namespace VendingMachine.Infrastructure.BLL.Services
                 {
                     ProductId = cartItem.ProductId,
                     ProductName = product.Name,
-                    BrandName = product.Brand.Name,
+                    BrandName = product.Brand?.Name ?? "Неизвестный бренд",
                     UnitPrice = product.Price,
                     Quantity = cartItem.Quantity,
                     OrderId = orderId

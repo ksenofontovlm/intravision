@@ -33,7 +33,7 @@ const CatalogPage: React.FC = () => {
   // Функция для добавления отладочной информации
   const addDebug = (message: string) => {
     const timestamp = new Date().toLocaleTimeString();
-    setDebugInfo(prev => [...prev.slice(-10), `${timestamp}: ${message}`]);
+    setDebugInfo((prev) => [...prev.slice(-10), `${timestamp}: ${message}`]);
     console.log(`[DEBUG] ${timestamp}: ${message}`);
   };
 
@@ -46,35 +46,41 @@ const CatalogPage: React.FC = () => {
 
   useEffect(() => {
     addDebug("Проверяем статус машины...");
-    
-    dispatch(checkMachineStatus()).then((action) => {
-      addDebug(`Статус машины получен. Тип: ${action.type}, Payload: ${JSON.stringify(action.payload)}`);
-      
-      // Проверяем, что действие выполнилось успешно
-      if (checkMachineStatus.fulfilled.match(action)) {
-        const isMachineBusy = action.payload;
-        addDebug(`Машина занята: ${isMachineBusy}`);
-        
-        if (!isMachineBusy && !lockAttempted.current) {
-          addDebug("Машина свободна, пытаемся заблокировать...");
-          lockAttempted.current = true;
-          dispatch(lockMachine()).then((lockAction) => {
-            if (lockMachine.fulfilled.match(lockAction)) {
-              addDebug("Машина успешно заблокирована нами");
-              setIsLockOwner(true);
-            } else {
-              addDebug("Ошибка блокировки машины");
-            }
-          });
-        } else if (isMachineBusy) {
-          addDebug("Машина занята другим пользователем");
+
+    dispatch(checkMachineStatus())
+      .then((action) => {
+        addDebug(
+          `Статус машины получен. Тип: ${
+            action.type
+          }, Payload: ${JSON.stringify(action.payload)}`
+        );
+
+        // Проверяем, что действие выполнилось успешно
+        if (checkMachineStatus.fulfilled.match(action)) {
+          const isMachineBusy = action.payload;
+          addDebug(`Машина занята: ${isMachineBusy}`);
+
+          if (!isMachineBusy && !lockAttempted.current) {
+            addDebug("Машина свободна, пытаемся заблокировать...");
+            lockAttempted.current = true;
+            dispatch(lockMachine()).then((lockAction) => {
+              if (lockMachine.fulfilled.match(lockAction)) {
+                addDebug("Машина успешно заблокирована нами");
+                setIsLockOwner(true);
+              } else {
+                addDebug("Ошибка блокировки машины");
+              }
+            });
+          } else if (isMachineBusy) {
+            addDebug("Машина занята другим пользователем");
+          }
+        } else if (checkMachineStatus.rejected.match(action)) {
+          addDebug(`Ошибка при проверке статуса: ${action.payload}`);
         }
-      } else if (checkMachineStatus.rejected.match(action)) {
-        addDebug(`Ошибка при проверке статуса: ${action.payload}`);
-      }
-    }).catch((error) => {
-      addDebug(`Ошибка в checkMachineStatus: ${error}`);
-    });
+      })
+      .catch((error) => {
+        addDebug(`Ошибка в checkMachineStatus: ${error}`);
+      });
 
     return () => {
       if (lockAttempted.current && isLockOwner) {
@@ -109,7 +115,6 @@ const CatalogPage: React.FC = () => {
       }
     });
   };
-  
 
   if (machineError || productError || filterError) {
     return (
@@ -117,7 +122,7 @@ const CatalogPage: React.FC = () => {
         <p className="text-red-500 text-center text-xl">
           Ошибка: {machineError || productError || filterError}
         </p>
-        <button 
+        <button
           onClick={handleForceUnlock}
           className="mt-4 px-4 py-2 bg-red-500 text-white rounded"
         >
@@ -130,43 +135,80 @@ const CatalogPage: React.FC = () => {
   return (
     <div className="container mx-auto p-4">
       <h1 className="text-3xl font-bold mb-6">Газированные напитки</h1>
-      
+      <div className="flex space-x-4 mb-6">
+        <BrandFilter />
+        <PriceFilter />
+      </div>
+
+      <div
+        style={{
+          display: "flex",
+          justifyContent: "flex-end",
+          marginBottom: "20px",
+        }}
+      >
+        <AdminImport />
+      </div>
+
       {/* Расширенная отладочная информация */}
       <div className="mb-4 p-4 bg-gray-100 text-sm border rounded" hidden>
         <h3 className="font-bold mb-2">Отладочная информация:</h3>
         <div className="grid grid-cols-2 gap-4 mb-2">
           <div>
-            <p><strong>isBusy:</strong> {isBusy !== undefined ? isBusy.toString() : 'undefined'}</p>
-            <p><strong>isLockOwner:</strong> {isLockOwner !== undefined ? isLockOwner.toString() : 'undefined'}</p>
-            <p><strong>lockAttempted:</strong> {lockAttempted.current !== undefined ? lockAttempted.current.toString() : 'undefined'}</p>
-            <p><strong>Products count:</strong> {products ? products.length : 'undefined'}</p>
+            <p>
+              <strong>isBusy:</strong>{" "}
+              {isBusy !== undefined ? isBusy.toString() : "undefined"}
+            </p>
+            <p>
+              <strong>isLockOwner:</strong>{" "}
+              {isLockOwner !== undefined ? isLockOwner.toString() : "undefined"}
+            </p>
+            <p>
+              <strong>lockAttempted:</strong>{" "}
+              {lockAttempted.current !== undefined
+                ? lockAttempted.current.toString()
+                : "undefined"}
+            </p>
+            <p>
+              <strong>Products count:</strong>{" "}
+              {products ? products.length : "undefined"}
+            </p>
           </div>
           <div>
-            <p><strong>Loading:</strong> {loading !== undefined ? loading.toString() : 'undefined'}</p>
-            <p><strong>Machine Error:</strong> {machineError || 'нет'}</p>
-            <p><strong>Product Error:</strong> {productError || 'нет'}</p>
+            <p>
+              <strong>Loading:</strong>{" "}
+              {loading !== undefined ? loading.toString() : "undefined"}
+            </p>
+            <p>
+              <strong>Machine Error:</strong> {machineError || "нет"}
+            </p>
+            <p>
+              <strong>Product Error:</strong> {productError || "нет"}
+            </p>
           </div>
         </div>
-        
+
         <div className="flex gap-2 mb-2">
-          <button 
+          <button
             onClick={handleForceUnlock}
             className="px-3 py-1 bg-red-500 text-white rounded text-xs"
           >
             Разблокировать
           </button>
-          <button 
+          <button
             onClick={handleTryLock}
             className="px-3 py-1 bg-green-500 text-white rounded text-xs"
           >
             Заблокировать
           </button>
         </div>
-        
+
         <div className="max-h-32 overflow-y-auto">
           <h4 className="font-semibold">Лог событий:</h4>
           {debugInfo.map((info, index) => (
-            <p key={index} className="text-xs">{info}</p>
+            <p key={index} className="text-xs">
+              {info}
+            </p>
           ))}
         </div>
       </div>
@@ -179,12 +221,7 @@ const CatalogPage: React.FC = () => {
           </p>
         </div>
       )}
-      
-      <div className="flex space-x-4 mb-6">
-        <BrandFilter />
-        <PriceFilter />
-      </div>
-      
+
       {loading ? (
         <p className="text-center">Загрузка...</p>
       ) : (
@@ -198,11 +235,10 @@ const CatalogPage: React.FC = () => {
           )}
         </div>
       )}
-      
+
       <div className="flex justify-end">
         <CartButton />
       </div>
-      <AdminImport />
     </div>
   );
 };

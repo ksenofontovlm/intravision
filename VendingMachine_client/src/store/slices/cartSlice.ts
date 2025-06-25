@@ -86,7 +86,7 @@ const cartSlice = createSlice({
       })
       .addCase(createOrder.fulfilled, (state, action) => {
         state.loading = false;
-        state.orderId = action.payload.OrderId; // Извлекаем OrderId из ответа
+        state.orderId = action.payload.orderId; // Извлекаем OrderId из ответа
         console.log('Order created, orderId:', state.orderId, 'items:', state.items);
       })
       .addCase(createOrder.rejected, (state, action) => {
