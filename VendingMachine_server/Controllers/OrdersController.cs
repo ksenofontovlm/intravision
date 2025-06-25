@@ -81,12 +81,20 @@ namespace VendingMachine.Controllers
         {
             try
             {
+                if (cartItem == null || cartItem.ProductId <= 0 || cartItem.Quantity <= 0)
+                {
+                    return BadRequest("Некорректные данные в запросе: productId или quantity недействительны");
+                }
                 await _vendingMachineService.UpdateCartItemAsync(orderId, cartItem);
                 return Ok("Корзина обновлена");
             }
             catch (InvalidOperationException ex)
             {
-                return BadRequest(ex.Message);
+                return BadRequest(new { error = ex.Message });
+            }
+            catch (Exception ex)
+            {
+                return StatusCode(500, new { error = "Внутренняя ошибка сервера", details = ex.Message });
             }
         }
 

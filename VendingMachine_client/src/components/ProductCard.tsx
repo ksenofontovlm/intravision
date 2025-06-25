@@ -1,7 +1,11 @@
-import { useDispatch, useSelector } from 'react-redux';
-import { addToCart, updateCartItem, removeCartItem } from '../store/slices/cartSlice';
-import { type RootState } from '../store/store';
-import { type Product } from '../types';
+import { useDispatch, useSelector } from "react-redux";
+import {
+  addToCart,
+  updateCartItem,
+  removeCartItem,
+} from "../store/slices/cartSlice";
+import { type RootState } from "../store/store";
+import { type Product } from "../types";
 
 interface ProductCardProps {
   product: Product;
@@ -11,18 +15,23 @@ const ProductCard: React.FC<ProductCardProps> = ({ product }) => {
   const dispatch = useDispatch();
   const cartItems = useSelector((state: RootState) => state.cart.items);
   const orderId = useSelector((state: RootState) => state.cart.orderId);
+  const cartError = useSelector((state: RootState) => state.cart.error);
 
   const cartItem = cartItems.find(item => item.productId === product.id);
   const quantity = cartItem ? cartItem.quantity : 0;
 
   const handleAdd = () => {
-    if (quantity < product.quantityInStock) {
-      const newQuantity = quantity + 1;
-      if (orderId) {
-        dispatch(updateCartItem({ orderId, item: { productId: product.id, quantity: newQuantity } }));
-      } else {
-        dispatch(addToCart({ productId: product.id, quantity: newQuantity }));
-      }
+    if (quantity >= product.quantityInStock) {
+      console.warn(`Нельзя добавить больше ${product.quantityInStock} единиц продукта ${product.id}`);
+      return;
+    }
+    const newQuantity = quantity + 1;
+    const cartItem = { productId: product.id, quantity: newQuantity };
+    console.log('handleAdd:', { orderId, cartItem });
+    if (orderId) {
+      dispatch(updateCartItem({ orderId, item: cartItem }));
+    } else {
+      dispatch(addToCart(cartItem));
     }
   };
 
@@ -43,6 +52,9 @@ const ProductCard: React.FC<ProductCardProps> = ({ product }) => {
     <div className="border rounded-lg p-4 flex flex-col items-center">
       <h3 className="text-lg font-semibold">{product.name}</h3>
       <p className="text-gray-600">{product.price} ₽</p>
+      {cartError && (
+        <p className="text-red-500 text-sm mt-2">{cartError}</p>
+      )}
       {quantity > 0 ? (
         <div className="flex items-center space-x-2 mt-2">
           <button

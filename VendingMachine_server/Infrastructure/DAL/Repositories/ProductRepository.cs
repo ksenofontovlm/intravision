@@ -23,5 +23,12 @@ namespace VendingMachine.Infrastructure.DAL.Repositories
 
             return await query.Include(p => p.Brand).ToListAsync();
         }
+
+        public async Task<Product> GetByIdAsync(int productId)
+        {
+            return await _context.Products
+                .Include(p => p.Brand) // Загружаем связанный Brand
+                .FirstOrDefaultAsync(p => p.Id == productId);
+        }
     }
 }

@@ -2,6 +2,7 @@ import { createSlice, createAsyncThunk, type PayloadAction } from '@reduxjs/tool
 import { vendingApi } from '../../api/vendingApi';
 import { type CartItem } from '../../types';
 import { AxiosError } from 'axios';
+import { fetchOrderDetails } from './orderSlice';
 
 interface CartState {
   items: CartItem[];
@@ -37,11 +38,13 @@ export const updateCartItem = createAsyncThunk(
   'cart/updateCartItem',
   async ({ orderId, item }: { orderId: number; item: CartItem }, { rejectWithValue }) => {
     try {
+      console.log('Sending updateCartItem:', { orderId, item });
       await vendingApi.updateCartItem(orderId, item);
       return item;
     } catch (error) {
       const axiosError = error as AxiosError;
-      return rejectWithValue(axiosError.response?.data as string || 'Ошибка обновления корзины');
+      console.error('Update cart item error:', axiosError.response?.data, axiosError);
+      return rejectWithValue(axiosError.response?.data?.error || 'Ошибка обновления корзины');
     }
   }
 );
@@ -79,35 +82,51 @@ const cartSlice = createSlice({
     },
   },
   extraReducers: (builder) => {
-    builder
-      .addCase(createOrder.pending, (state) => {
-        state.loading = true;
-        state.error = null;
-      })
-      .addCase(createOrder.fulfilled, (state, action) => {
-        state.loading = false;
-        state.orderId = action.payload.orderId; // Извлекаем OrderId из ответа
-        console.log('Order created, orderId:', state.orderId, 'items:', state.items);
-      })
-      .addCase(createOrder.rejected, (state, action) => {
-        state.loading = false;
-        state.error = action.payload as string;
-      })
-      .addCase(updateCartItem.fulfilled, (state, action) => {
-        const item = action.payload;
-        const existingItem = state.items.find(i => i.productId === item.productId);
-        if (existingItem) {
-          existingItem.quantity = item.quantity;
-        } else {
-          state.items.push(item);
-        }
-        state.totalItems = state.items.reduce((sum, i) => sum + i.quantity, 0);
-      })
-      .addCase(removeCartItem.fulfilled, (state, action) => {
-        state.items = state.items.filter(i => i.productId !== action.payload);
-        state.totalItems = state.items.reduce((sum, i) => sum + i.quantity, 0);
-      });
-  },
+  builder
+    .addCase(createOrder.pending, (state) => {
+      state.loading = true;
+      state.error = null;
+    })
+    .addCase(createOrder.fulfilled, (state, action) => {
+      state.loading = false;
+      state.orderId = action.payload.orderId;
+      console.log('Order created, orderId:', state.orderId, 'items:', state.items);
+    })
+    .addCase(createOrder.rejected, (state, action) => {
+      state.loading = false;
+      state.error = action.payload as string;
+    })
+    .addCase(updateCartItem.pending, (state) => {
+      state.loading = true;
+      state.error = null;
+    })
+    .addCase(updateCartItem.fulfilled, (state, action) => {
+      state.loading = false;
+      const item = action.payload;
+      const existingItem = state.items.find(i => i.productId === item.productId);
+      if (existingItem) {
+        existingItem.quantity = item.quantity;
+      } else {
+        state.items.push(item);
+      }
+      state.totalItems = state.items.reduce((sum, i) => sum + i.quantity, 0);
+      // Запрашиваем обновленные детали заказа
+      if (state.orderId) {
+        dispatch(fetchOrderDetails(state.orderId));
+      }
+    })
+    .addCase(updateCartItem.rejected, (state, action) => {
+      state.loading = false;
+      state.error = action.payload as string;
+    })
+    .addCase(removeCartItem.fulfilled, (state, action) => {
+      state.items = state.items.filter(i => i.productId !== action.payload);
+      state.totalItems = state.items.reduce((sum, i) => sum + i.quantity, 0);
+      if (state.orderId) {
+        dispatch(fetchOrderDetails(state.orderId));
+      }
+    });
+},
 });
 
 export const { addToCart, clearCart } = cartSlice.actions;

@@ -139,16 +139,27 @@ namespace VendingMachine.Infrastructure.BLL.Services
 
         public async Task UpdateCartItemAsync(int orderId, CartItem cartItem)
         {
+            Console.WriteLine($"UpdateCartItemAsync: orderId={orderId}, productId={cartItem.ProductId}, quantity={cartItem.Quantity}");
             var order = await _orderRepository.GetByIdWithDetailsAsync(orderId);
             if (order == null)
+            {
+                Console.WriteLine($"Order not found: orderId={orderId}");
                 throw new InvalidOperationException("Заказ не найден");
+            }
 
             var product = await _productRepository.GetByIdAsync(cartItem.ProductId);
-            if (product == null || product.QuantityInStock < cartItem.Quantity)
-                throw new InvalidOperationException("Недостаточно товара на складе");
-
-            if (product.BrandId != 0 && product.Brand == null)
-                throw new InvalidOperationException($"Продукт с ID {cartItem.ProductId} имеет недействительный BrandId");
+            if (product == null)
+            {
+                Console.WriteLine($"Product not found: productId={cartItem.ProductId}");
+                throw new InvalidOperationException($"Продукт с ID {cartItem.ProductId} не найден");
+            }
+            if (product.QuantityInStock < cartItem.Quantity)
+            {
+                Console.WriteLine($"Insufficient stock: productId={cartItem.ProductId}, requested={cartItem.Quantity}, available={product.QuantityInStock}");
+                throw new InvalidOperationException($"Недостаточно товара на складе для продукта ID {cartItem.ProductId}");
+            }
+            //if (product.BrandId != 0 && product.Brand == null)
+            //    throw new InvalidOperationException($"Продукт с ID {cartItem.ProductId} имеет недействительный BrandId");
 
             var existingItem = order.OrderItems.FirstOrDefault(oi => oi.ProductId == cartItem.ProductId);
             if (existingItem != null)
@@ -175,6 +186,7 @@ namespace VendingMachine.Infrastructure.BLL.Services
             product.QuantityInStock -= cartItem.Quantity;
             await _productRepository.UpdateAsync(product);
             await _orderRepository.UpdateOrderAsync(order);
+            Console.WriteLine($"Cart updated: orderId={orderId}, productId={cartItem.ProductId}, newQuantity={cartItem.Quantity}");
         }
 
         public async Task<bool> ProcessPaymentAsync(int orderId, Dictionary<decimal, int> insertedCoins)
