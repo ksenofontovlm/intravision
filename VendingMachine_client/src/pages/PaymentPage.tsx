@@ -6,8 +6,10 @@ import {
   fetchCoins,
   processPayment,
   setInsertedCoins,
+  resetOrderState
 } from "../store/slices/orderSlice";
 import CoinInput from "../components/CoinInput";
+import { resetCartState } from '../store/slices/cartSlice';
 
 const PaymentPage: React.FC = () => {
   const dispatch = useDispatch();
@@ -89,6 +91,12 @@ const PaymentPage: React.FC = () => {
     }
   };
 
+const handleNavigateToCatalog = () => {
+    dispatch(resetOrderState());
+    dispatch(resetCartState());
+    navigate('/');
+  };
+
   if (loading) return <p>Загрузка...</p>;
   if (error) return <p>Ошибка: {error}</p>;
   if (!order || !order.orderItems.length) return <p>Заказ пуст</p>;
@@ -133,26 +141,30 @@ const PaymentPage: React.FC = () => {
         </button>
       </div>
       {paymentResult && (
-        <div className="fixed inset-0 flex items-center justify-center z-50 bg-black bg-opacity-50">
-          <div className="bg-white p-6 rounded-lg shadow-lg border border-green-400 max-w-md w-full animate-fade-in">
-            <p className="text-green-800 text-lg font-semibold">
-              {paymentResult.message}
-            </p>
-            {paymentResult.changeAmount > 0 && (
-              <p className="text-green-700">
-                Сдача: {paymentResult.changeAmount} ₽ (монеты:{" "}
-                {JSON.stringify(paymentResult.changeCoins)})
-              </p>
-            )}
-            <button
-              onClick={() => navigate("/")}
-              className="mt-4 px-4 py-2 bg-blue-500 text-white rounded hover:bg-blue-600 transition-colors"
-            >
-              Каталог напитков
-            </button>
-          </div>
+  <div className="fixed inset-0 flex items-center justify-center z-50 bg-black bg-opacity-50">
+    <div className="bg-white p-6 rounded-lg shadow-lg border border-green-400 max-w-md w-full animate-fade-in">
+      <p className="text-green-800 text-lg font-semibold">{paymentResult.message}</p>
+      {paymentResult.changeAmount > 0 && (
+        <div className="mt-2">
+          <p className="text-green-700 font-medium">Сдача: {paymentResult.changeAmount} ₽</p>
+          <ul className="list-disc list-inside mt-1 text-green-700">
+            {Object.entries(paymentResult.changeCoins).map(([denomination, count]) => (
+              <li key={denomination}>
+                {Number(denomination).toFixed(2)} ₽: {count} шт.
+              </li>
+            ))}
+          </ul>
         </div>
       )}
+     <button
+              onClick={handleNavigateToCatalog}
+              className="mt-4 px-4 py-2 bg-blue-500 text-white rounded hover:bg-blue-600 transition-colors"
+            >
+        Каталог напитков
+      </button>
+    </div>
+  </div>
+)}
       {error && error.includes("не может выдать сдачу") && (
         <div className="mt-6 p-4 bg-red-100 border border-red-400 rounded">
           <p>{error}</p>

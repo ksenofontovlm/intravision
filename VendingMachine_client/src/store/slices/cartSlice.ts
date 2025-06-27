@@ -110,6 +110,18 @@ const cartSlice = createSlice({
       state.orderId = null;
       state.totalItems = 0;
     },
+    removeFromCart: (state, action: PayloadAction<number>) => {
+      state.items = state.items.filter(item => item.productId !== action.payload);
+      state.totalAmount = state.items.reduce((sum, item) => sum + item.quantity * (item.price || 0), 0);
+    },
+    setOrderId: (state, action: PayloadAction<number>) => {
+      state.orderId = action.payload;
+    },
+    resetCartState: (state) => {
+      state.orderId = null;
+      state.items = [];
+      state.totalAmount = 0;
+    },
   },
   extraReducers: (builder) => {
     builder
@@ -163,5 +175,5 @@ const cartSlice = createSlice({
   },
 });
 
-export const { addToCart, clearCart } = cartSlice.actions;
+export const { addToCart, removeFromCart, setOrderId, resetCartState } = cartSlice.actions;
 export default cartSlice.reducer;

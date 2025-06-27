@@ -80,7 +80,16 @@ export const setInsertedCoins = createAsyncThunk(
 const orderSlice = createSlice({
   name: 'order',
   initialState,
-  reducers: {},
+  reducers: {
+    resetOrderState: (state) => {
+      state.order = null;
+      state.coins = null;
+      state.insertedCoins = {};
+      state.paymentResult = null;
+      state.loading = false;
+      state.error = null;
+    },
+  },
   extraReducers: (builder) => {
     builder
       .addCase(fetchOrderDetails.pending, (state) => {
@@ -126,4 +135,5 @@ const orderSlice = createSlice({
   },
 });
 
+export const { resetOrderState } = orderSlice.actions;
 export default orderSlice.reducer;

@@ -1,64 +1,51 @@
-import { createSlice, createAsyncThunk, type PayloadAction } from '@reduxjs/toolkit';
+import { createSlice, createAsyncThunk } from '@reduxjs/toolkit';
 import { vendingApi } from '../../api/vendingApi';
-import { type Brand } from '../../types';
-import { AxiosError } from 'axios';
 
 interface FilterState {
-  brandId: number | undefined;
-  minPrice: number | undefined;
-  maxPrice: number | undefined;
-  brands: Brand[];
-  priceRange: { min: number; max: number } | null;
+  brandId: number | null;
+  minPrice: number | null;
+  maxPrice: number | null;
+  brands: { id: number; name: string }[];
   loading: boolean;
   error: string | null;
 }
 
 const initialState: FilterState = {
-  brandId: undefined,
-  minPrice: undefined,
-  maxPrice: undefined,
+  brandId: null,
+  minPrice: null,
+  maxPrice: null,
   brands: [],
-  priceRange: null,
   loading: false,
   error: null,
 };
 
-export const fetchBrands = createAsyncThunk(
-  'filter/fetchBrands',
-  async (_, { rejectWithValue }) => {
-    try {
-      const response = await vendingApi.getBrands();
-      return response;
-    } catch (error) {
-          const axiosError = error as AxiosError;
-          return rejectWithValue(axiosError.response?.data as string || 'Ошибка загрузки брендов');
-    }
+export const fetchBrands = createAsyncThunk('filter/fetchBrands', async (_, { rejectWithValue }) => {
+  try {
+    const response = await vendingApi.getBrands();
+    return response;
+  } catch (error) {
+    return rejectWithValue('Не удалось загрузить бренды');
   }
-);
+});
 
-export const fetchPriceRange = createAsyncThunk(
-  'filter/fetchPriceRange',
-  async (brandId: number | undefined, { rejectWithValue }) => {
-    try {
-      const response = await vendingApi.getPriceRange(brandId);
-      return response;
-    } catch (error) {
-      const axiosError = error as AxiosError;
-      return rejectWithValue(axiosError.response?.data as string || 'Ошибка загрузки ценового диапазона');
-    }
+export const fetchPriceRange = createAsyncThunk('filter/fetchPriceRange', async (brandId?: number, { rejectWithValue }) => {
+  try {
+    const response = await vendingApi.getPriceRange(brandId);
+    return response;
+  } catch (error) {
+    return rejectWithValue('Не удалось загрузить диапазон цен');
   }
-);
+});
 
 const filterSlice = createSlice({
   name: 'filter',
   initialState,
   reducers: {
-    setBrandId: (state, action: PayloadAction<number | undefined>) => {
+    setBrandId: (state, action) => {
       state.brandId = action.payload;
     },
-    setPriceRange: (state, action: PayloadAction<{ minPrice: number; maxPrice: number }>) => {
-      state.minPrice = action.payload.minPrice;
-      state.maxPrice = action.payload.maxPrice;
+    setMaxPrice: (state, action) => {
+      state.maxPrice = action.payload; // Устанавливаем только maxPrice
     },
   },
   extraReducers: (builder) => {
@@ -69,7 +56,7 @@ const filterSlice = createSlice({
       })
       .addCase(fetchBrands.fulfilled, (state, action) => {
         state.loading = false;
-        state.brands = [{ id: 0, name: 'Все бренды' }, ...action.payload];
+        state.brands = action.payload;
       })
       .addCase(fetchBrands.rejected, (state, action) => {
         state.loading = false;
@@ -81,7 +68,8 @@ const filterSlice = createSlice({
       })
       .addCase(fetchPriceRange.fulfilled, (state, action) => {
         state.loading = false;
-        state.priceRange = { min: action.payload.MinPrice, max: action.payload.MaxPrice };
+        state.minPrice = action.payload.MinPrice;
+        state.maxPrice = action.payload.MaxPrice;
       })
       .addCase(fetchPriceRange.rejected, (state, action) => {
         state.loading = false;
@@ -90,5 +78,5 @@ const filterSlice = createSlice({
   },
 });
 
-export const { setBrandId, setPriceRange } = filterSlice.actions;
+export const { setBrandId, setMaxPrice } = filterSlice.actions; // Экспортируем setMaxPrice
 export default filterSlice.reducer;
