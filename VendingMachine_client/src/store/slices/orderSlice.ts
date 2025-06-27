@@ -1,11 +1,13 @@
-import { createSlice, createAsyncThunk } from '@reduxjs/toolkit';
+import { createSlice, createAsyncThunk, type PayloadAction } from '@reduxjs/toolkit';
 import { vendingApi } from '../../api/vendingApi';
 import { type Order, type Coin } from '../../types';
-import { AxiosError } from 'axios';
+import { type AppDispatch } from '../store';
 
 interface OrderState {
   order: Order | null;
   coins: Coin[] | null;
+  insertedCoins: Record<number, number>; // Состояние внесенных монет
+  paymentResult: { message: string; сhangeAmount: number; сhangeCoins: Record<number, number> } | null;
   loading: boolean;
   error: string | null;
 }
@@ -13,6 +15,8 @@ interface OrderState {
 const initialState: OrderState = {
   order: null,
   coins: null,
+  insertedCoins: {},
+  paymentResult: null,
   loading: false,
   error: null,
 };
@@ -22,15 +26,9 @@ export const fetchOrderDetails = createAsyncThunk(
   async (orderId: number, { rejectWithValue }) => {
     try {
       const response = await vendingApi.getOrderDetails(orderId);
-      console.log('Fetch order details response:', response);
-      if (!response.orderItems || !response.orderItems.length) {
-        console.warn('Order details returned empty orderItems');
-      }
       return response;
     } catch (error) {
-      const axiosError = error as AxiosError;
-      console.error('Fetch order details error:', axiosError);
-      return rejectWithValue(axiosError.response?.data as string || 'Ошибка загрузки деталей заказа');
+      return rejectWithValue('Не удалось загрузить детали заказа');
     }
   }
 );
@@ -40,12 +38,42 @@ export const fetchCoins = createAsyncThunk(
   async (_, { rejectWithValue }) => {
     try {
       const response = await vendingApi.getCoins();
-      console.log('Fetch coins response:', response);
       return response;
     } catch (error) {
-      const axiosError = error as AxiosError;
-      return rejectWithValue(axiosError.response?.data as string || 'Ошибка загрузки монет');
+      return rejectWithValue('Не удалось загрузить монеты');
     }
+  }
+);
+
+export const processPayment = createAsyncThunk(
+  'order/processPayment',
+  async (
+    { orderId, insertedCoins }: { orderId: number; insertedCoins: Record<number, number> },
+    { rejectWithValue }
+  ) => {
+    try {
+      console.log('Sending payment request:', { orderId, insertedCoins }); // Лог запроса
+      const response = await vendingApi.processPayment(orderId, insertedCoins);
+      console.log('Payment response:', response); // Лог ответа
+      return response;
+    } catch (error) {
+      console.error('Payment error:', error); // Лог ошибки
+      const axiosError = error as AxiosError;
+      return rejectWithValue(axiosError.response?.data?.Message || 'Ошибка оплаты');
+    }
+  }
+);
+
+export const setInsertedCoins = createAsyncThunk(
+  'order/setInsertedCoins',
+  async (
+    { denomination, count }: { denomination: number; count: number },
+    { getState }
+  ) => {
+    const state = getState() as RootState;
+    const newInsertedCoins = { ...state.order.insertedCoins, [denomination]: count };
+    console.log('New inserted coins in thunk:', newInsertedCoins); // Лог для отладки
+    return newInsertedCoins;
   }
 );
 
@@ -62,7 +90,6 @@ const orderSlice = createSlice({
       .addCase(fetchOrderDetails.fulfilled, (state, action) => {
         state.loading = false;
         state.order = action.payload;
-        console.log('Order updated in state:', state.order);
       })
       .addCase(fetchOrderDetails.rejected, (state, action) => {
         state.loading = false;
@@ -79,6 +106,22 @@ const orderSlice = createSlice({
       .addCase(fetchCoins.rejected, (state, action) => {
         state.loading = false;
         state.error = action.payload as string;
+      })
+      .addCase(processPayment.pending, (state) => {
+        state.loading = true;
+        state.error = null;
+        state.paymentResult = null;
+      })
+      .addCase(processPayment.fulfilled, (state, action) => {
+        state.loading = false;
+        state.paymentResult = action.payload;
+      })
+      .addCase(processPayment.rejected, (state, action) => {
+        state.loading = false;
+        state.error = action.payload as string;
+      })
+      .addCase(setInsertedCoins.fulfilled, (state, action: PayloadAction<Record<number, number>>) => {
+        state.insertedCoins = action.payload;
       });
   },
 });

@@ -57,7 +57,7 @@ namespace VendingMachine.Controllers
         public async Task<IActionResult> GetCoins()
         {
             var coins = await _vendingMachineService.GetCoinsAsync();
-            return Ok(coins);
+            return Ok(coins.Select(c => new { value = c.Denomination, count = c.Quantity }).ToList());
         }
 
         [HttpGet("{orderId}")]
@@ -86,15 +86,12 @@ namespace VendingMachine.Controllers
                     return BadRequest("Некорректные данные в запросе: productId или quantity недействительны");
                 }
                 await _vendingMachineService.UpdateCartItemAsync(orderId, cartItem);
-                return Ok("Корзина обновлена");
+                var updatedOrder = await _vendingMachineService.GetOrderDetailsAsync(orderId);
+                return Ok(updatedOrder.OrderItems);
             }
             catch (InvalidOperationException ex)
             {
                 return BadRequest(new { error = ex.Message });
-            }
-            catch (Exception ex)
-            {
-                return StatusCode(500, new { error = "Внутренняя ошибка сервера", details = ex.Message });
             }
         }
 

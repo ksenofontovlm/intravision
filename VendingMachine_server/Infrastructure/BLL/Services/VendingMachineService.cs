@@ -167,6 +167,7 @@ namespace VendingMachine.Infrastructure.BLL.Services
                 var oldQuantity = existingItem.Quantity;
                 existingItem.Quantity = cartItem.Quantity;
                 existingItem.UnitPrice = product.Price;
+                existingItem.BrandName = product.Brand?.Name ?? "Неизвестный бренд";
                 order.TotalAmount += product.Price * (cartItem.Quantity - oldQuantity);
             }
             else

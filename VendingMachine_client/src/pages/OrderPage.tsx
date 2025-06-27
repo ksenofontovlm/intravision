@@ -14,11 +14,11 @@ const OrderPage: React.FC = () => {
   const error = useSelector((state: RootState) => state.order.error);
 
   useEffect(() => {
-    if (orderId && !order) {
+    if (orderId) {
       console.log('Fetching order details for orderId:', orderId);
       dispatch(fetchOrderDetails(orderId));
     }
-  }, [dispatch, orderId, order]);
+  }, [dispatch, orderId]);
 
   if (loading) return <p>Загрузка...</p>;
   if (error) return <p>Ошибка: {error}</p>;

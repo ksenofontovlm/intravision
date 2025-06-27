@@ -155,13 +155,16 @@ export const vendingApi = {
         throw error;
       }),
   getCoins: () =>
-    api
-      .get<Coin[]>('/orders/coins')
-      .then(response => response.data)
-      .catch(error => {
-        console.error('Get coins error:', error);
-        throw error;
-      }),
+  api
+    .get<Coin[]>('/orders/coins')
+    .then(response => {
+      console.log('Coins response data:', response.data); // Добавляем лог
+      return response.data;
+    })
+    .catch(error => {
+      console.error('Get coins error:', error);
+      throw error;
+    }),
   processPayment: (orderId: number, insertedCoins: Record<number, number>) =>
     api
       .post<{
